@@ -15,18 +15,25 @@ public:
         , lowerLeftCorner(llc)
         , horizontal(h)
         , vertical(v) {}
-    Camera(float fov, float aspectRatio) {
+    Camera(const Vec3& eye, const Vec3& lookat, const Vec3& up, float fov, float aspectRatio) {
         float theta = fov * M_PI / 180.f;
         float halfHeight = std::tan(theta * 0.5f);
         float halfWidth = aspectRatio * halfHeight;
-        lowerLeftCorner = Vec3(-halfWidth, -halfHeight, -1.0f);
-        horizontal = Vec3(2.0f * halfWidth, 0.0f, 0.0f);
-        vertical = Vec3(0.0f, 2 * halfHeight, 0.0f);
-        origin = Vec3(0.0f);
+
+        // compose the orthogonal view system.
+        origin = eye;
+        Vec3 w = (eye - lookat).normalized();
+        Vec3 u = up.cross(w).normalized();
+        Vec3 v = w.cross(u);
+
+        // set up the coord system
+        lowerLeftCorner = eye - halfWidth * u - halfHeight * v - w;
+        horizontal = 2 * halfWidth * u;
+        vertical = 2 * halfHeight * v;
     }
 
     Ray generateRay(float u, float v) const {
-        return Ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
+        return Ray(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
     }
 
     Vec3 origin;

@@ -72,11 +72,7 @@ int main(int argc, char** argv) {
     list.mObjects[3] = std::shared_ptr<Shape>(new Sphere(Vec3(-1.0f, 0.0f, -1.0f), 0.5f, std::shared_ptr<Material>(new Dielectric(1.5f))));
 
     // Create a crude camera
-    Vec3 lowerLeftCorner(-2.0f, -1.0f, -1.0f);
-    Vec3 horizontal(4.0f, 0.0f, 0.0f);
-    Vec3 vertical(0.0f, 2.0f, 0.0f);
-    Vec3 origin(0.0f);
-    Camera camera(origin, lowerLeftCorner, horizontal, vertical);
+    Camera camera(Vec3(1.5f, 1.5f, 0.0f), Vec3(0.f, 0.f, -1.f), Vec3(0.f, 1.f, 0.f), 90, float(nx) / float(ny));
 
     // perform the actual raytracing
     std::cout << "Tracing starting...\n";
