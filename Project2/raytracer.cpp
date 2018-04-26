@@ -72,7 +72,11 @@ int main(int argc, char** argv) {
     list.mObjects[3] = std::shared_ptr<Shape>(new Sphere(Vec3(-1.0f, 0.0f, -1.0f), 0.5f, std::shared_ptr<Material>(new Dielectric(1.5f))));
 
     // Create a crude camera
-    Camera camera(Vec3(1.5f, 1.5f, 0.0f), Vec3(0.f, 0.f, -1.f), Vec3(0.f, 1.f, 0.f), 90, float(nx) / float(ny));
+    Vec3 eye(3.f, 3.f, 2.f);
+    Vec3 lookat(0.f, 0.f, -1.f);
+    float focalDistance = (lookat - eye).length();
+    float aperture = 2.0f;
+    Camera camera(eye, lookat, Vec3(0.f, 1.f, 0.f), 20.f, float(nx)/float(ny), aperture,  0.9 * focalDistance);
 
     // perform the actual raytracing
     std::cout << "Tracing starting...\n";
@@ -82,7 +86,7 @@ int main(int argc, char** argv) {
             for (int s = 0; s < ns; s++) {
                 float u = (float(i + rng.nextDouble()) / float(nx));
                 float v = (float(j + rng.nextDouble()) / float(ny));
-                Ray r = camera.generateRay(u, v);
+                Ray r = camera.generateRay(u, v, rng);
                 col += color(r, list, rng, 0);
             }
             // gamma correction
