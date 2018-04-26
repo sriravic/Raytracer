@@ -69,10 +69,12 @@ public:
         float minDistance = maxT;
         bool hitAnything = false;
         for(auto& o : mObjects)
-            if (o->intersect(r, minT, minDistance, tempRec)) {
-                minDistance = tempRec.t;
-                hitAnything = true;
-                record = tempRec;
+            if (o != nullptr) {
+                if (o->intersect(r, minT, minDistance, tempRec)) {
+                    minDistance = tempRec.t;
+                    hitAnything = true;
+                    record = tempRec;
+                }
             }
         return hitAnything;
     }

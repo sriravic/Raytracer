@@ -48,6 +48,46 @@ void writeToImageFile(const std::string& filename, std::shared_ptr<unsigned char
     }
 }
 
+void initRandomScene(pcg32& rng, ShapeList& list, int nSpheres) {
+    list.mObjects.resize(nSpheres);
+    list.mObjects[0] = std::shared_ptr<Shape>(new Sphere(Vec3(0.f, -1000.f, 0.f), 1000.f, std::shared_ptr<Material>(new Lambertian(Vec3(0.5f)))));
+    int i = 1;
+    for (int a = -11; a < 11; a++) {
+        for (int b = -11; b < 11; b++) {
+            float chooseMat = (float)rng.nextDouble();
+            Vec3 center(a + 0.9f * (float)rng.nextDouble(), 0.2f, b + 0.9f * (float)rng.nextDouble());
+            if ((center - Vec3(4.0f, 0.2f, 0.f)).length() > 0.9) {
+                if (chooseMat < 0.8f) {
+                    // diffuse spheres
+                    list.mObjects[i++] = std::shared_ptr<Shape>(new Sphere(center,
+                        0.2f, std::shared_ptr<Material>(
+                            new Lambertian(Vec3((float)(rng.nextDouble() * rng.nextDouble()),
+                                                (float)(rng.nextDouble() * rng.nextDouble()),
+                                                (float)(rng.nextDouble() * rng.nextDouble())
+                            )))));
+                } else if (chooseMat < 0.95f) {
+                    // metal
+                    list.mObjects[i++] = std::shared_ptr<Shape>(new Sphere(center,
+                        0.2f, std::shared_ptr<Material>(
+                            new Metal(Vec3(
+                                0.5f * (1.0f + (float)rng.nextDouble()),
+                                0.5f * (1.0f + (float)rng.nextDouble()),
+                                0.5f * (1.0f + (float)rng.nextDouble())
+                            )))));
+                } else {
+                    // glass
+                    list.mObjects[i++] = std::shared_ptr<Shape>(new Sphere(center,
+                        0.2f, std::shared_ptr<Material>(
+                            new Dielectric(1.5f))));
+                }
+            }
+        }
+    }
+    list.mObjects[i++] = std::shared_ptr<Shape>(new Sphere(Vec3(0.f, 1.f, 0.f), 1.f, std::shared_ptr<Material>(new Dielectric(1.5f))));
+    list.mObjects[i++] = std::shared_ptr<Shape>(new Sphere(Vec3(-4.f, 1.f, 0.f), 1.f, std::shared_ptr<Material>(new Lambertian(Vec3(0.4f, 0.2f, 0.1f)))));
+    list.mObjects[i++] = std::shared_ptr<Shape>(new Sphere(Vec3(4.f, 1.f, 0.f), 1.f, std::shared_ptr<Material>(new Metal(Vec3(0.7f, 0.6f, 0.5f), 0.0f))));
+}
+
 int main(int argc, char** argv) {
     std::cout << "Raytracing in One Weekend\n";
 
@@ -63,20 +103,27 @@ int main(int argc, char** argv) {
     std::ofstream outfile("out.ppm");
     outfile << "P3\n" << nx << " " << ny << "\n255\n";      // header for the pfm file
 
+    bool createRandomScene = true;
+
     // create a world
     ShapeList list;
-    list.mObjects.resize(4);
-    list.mObjects[0] = std::shared_ptr<Shape>(new Sphere(Vec3(0.0f, 0.0f, -1.0f), 0.5f, std::shared_ptr<Material>(new Lambertian(Vec3(0.8f, 0.3f, 0.3f)))));
-    list.mObjects[1] = std::shared_ptr<Shape>(new Sphere(Vec3(0.0f, -100.5f, -1.0f), 100.0f, std::shared_ptr<Material>(new Lambertian(Vec3(0.8f, 0.8f, 0.0f)))));
-    list.mObjects[2] = std::shared_ptr<Shape>(new Sphere(Vec3(1.0f, 0.0f, -1.0f), 0.5f, std::shared_ptr<Material>(new Metal(Vec3(0.8f, 0.6f, 0.2f), 1.0f))));
-    list.mObjects[3] = std::shared_ptr<Shape>(new Sphere(Vec3(-1.0f, 0.0f, -1.0f), 0.5f, std::shared_ptr<Material>(new Dielectric(1.5f))));
+    if (!createRandomScene) {
+        list.mObjects.resize(4);
+        list.mObjects[0] = std::shared_ptr<Shape>(new Sphere(Vec3(0.0f, 0.0f, -1.0f), 0.5f, std::shared_ptr<Material>(new Lambertian(Vec3(0.8f, 0.3f, 0.3f)))));
+        list.mObjects[1] = std::shared_ptr<Shape>(new Sphere(Vec3(0.0f, -100.5f, -1.0f), 100.0f, std::shared_ptr<Material>(new Lambertian(Vec3(0.8f, 0.8f, 0.0f)))));
+        list.mObjects[2] = std::shared_ptr<Shape>(new Sphere(Vec3(1.0f, 0.0f, -1.0f), 0.5f, std::shared_ptr<Material>(new Metal(Vec3(0.8f, 0.6f, 0.2f), 1.0f))));
+        list.mObjects[3] = std::shared_ptr<Shape>(new Sphere(Vec3(-1.0f, 0.0f, -1.0f), 0.5f, std::shared_ptr<Material>(new Dielectric(1.5f))));
+    }
+    else {
+        initRandomScene(rng, list, 500);
+    }
 
     // Create a crude camera
-    Vec3 eye(3.f, 3.f, 2.f);
-    Vec3 lookat(0.f, 0.f, -1.f);
-    float focalDistance = (lookat - eye).length();
-    float aperture = 2.0f;
-    Camera camera(eye, lookat, Vec3(0.f, 1.f, 0.f), 20.f, float(nx)/float(ny), aperture,  0.9 * focalDistance);
+    Vec3 eye(13.f, 2.f, 3.f);
+    Vec3 lookat(0.f, 0.f, 0.f);
+    float focalDistance = 10.f;
+    float aperture = 0.0f;
+    Camera camera(eye, lookat, Vec3(0.f, 1.f, 0.f), 20.f, float(nx)/float(ny), aperture,  0.9f * focalDistance);
 
     // perform the actual raytracing
     std::cout << "Tracing starting...\n";
