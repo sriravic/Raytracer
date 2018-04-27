@@ -149,6 +149,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>
       <Command>If exist "*.cl" copy "*.cl" "$(OutDir)\"</Command>
@@ -179,7 +180,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Intel_OpenCL_Build_Rules Include="device.cl" />
+    <Intel_OpenCL_Build_Rules Include="raytracer.cl" />
+    <Intel_OpenCL_Build_Rules Include="vector_add.cl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="host.cpp" />
